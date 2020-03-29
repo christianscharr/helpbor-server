@@ -3,6 +3,8 @@ const BEEP = {
   streamUrl: [`${process.env.HELPBOR_HOST}/beep.mp3`]
 };
 
+const STREAM_LEVEL = 0.8;
+
 const nccoWelcome = [
   {
     action: 'talk',
@@ -18,7 +20,7 @@ const nccoLanguage = [
   {
     action: 'talk',
     text: '<speak>' +
-      '<p>For English please press the number key 1 on your phone!</p>' +
+      '<p>For English please press the number 1 on your phone!</p>' +
       '</speak>',
     voiceName: 'Salli',
     bargeIn: true
@@ -30,9 +32,9 @@ const nccoRole = [
     action: 'talk',
     text: '<speak>' +
       '<p>Would you like to make an request to the big and small heroes in your neighborhood?</p>' +
-      '<p>Then please press the number key 1 on your phone!</p>' +
+      '<p>Then please press the number 1 on your phone!</p>' +
       '<p>Or would you like to be a <phoneme alphabet="ipa" ph="hɛlpbər">helpbor</phoneme> hero yourself?</p>' +
-      '<p>Then please press number key 2 on your phone!</p>' +
+      '<p>Then please press number 2 on your phone!</p>' +
       '</speak>',
     voiceName: 'Salli',
     bargeIn: true
@@ -73,7 +75,7 @@ const nccoPhoneNumber = [
     action: 'talk',
     text: '<speak>' +
       '<p>Can you also be reached later on this telephone number from which you are calling?</p>' +
-      '<p>If so, please press number key 1 and then the hash key on your phone!</p>' +
+      '<p>If so, please press number 1 and then the hash key on your phone!</p>' +
       '<p>If not, please enter your telephone number for queries using the number keys on your telephone!</p>' +
       '<p>Please enter the phone number without country code!</p>' +
       '<p>End your entry with the hash key.</p>' +
@@ -132,12 +134,12 @@ const nccoRequestType = [
     action: 'talk',
     text: '<speak>' +
       '<p>What kind of request do you need support for?</p>' +
-      '<p>If you need some groceries or other retail products, please press the number key 1 on your phone!</p>' +
-      '<p>If letters or parcels have to be picked up at the post office, please press number key 2 on your phone!</p>' +
-      '<p>If you need anything from the pharmacy, please press the number key 3 on your phone!</p>' +
-      '<p>If you want your dog to be walked, please press the number key 4 on your phone!</p>' +
-      '<p>If you need a car service, please press the number key 5 on your phone!</p>' +
-      '<p>If you have an other request, please press the number key 9 on your phone!</p>' +
+      '<p>If you need some groceries or other retail products, please press the number 1 on your phone!</p>' +
+      '<p>If letters or parcels have to be picked up at the post office, please press number 2 on your phone!</p>' +
+      '<p>If you need anything from the pharmacy, please press the number 3 on your phone!</p>' +
+      '<p>If you want your dog to be walked, please press the number 4 on your phone!</p>' +
+      '<p>If you need a car service, please press the number 5 on your phone!</p>' +
+      '<p>If you have an other request, please press the number 9 on your phone!</p>' +
       '</speak>',
     voiceName: 'Salli',
     bargeIn: true
@@ -177,20 +179,21 @@ const nccoNotifySummarize = [
 ];
 
 function nccoSummarizeRequest(conversationUUID: string, phoneNumber: string, zipCode: string, requestType: number) {
-  let ncco = [
+  const nccoPart1 = [
     {
       action: 'talk',
       text: '<speak>' +
         '<p>I will now summarize your request again, please check the information.</p>' +
-        '<p>If everything is correct, please press number key 1 on your phone!</p>' +
-        '<p>If an error has crept in somewhere, please press number key 2 on your phone!</p>' +
+        '<p>If everything is correct, please press number 1 on your phone!</p>' +
+        '<p>If an error has crept in somewhere, please press number 2 on your phone!</p>' +
         '<p>Your name is:</p>' +
         '</speak>',
       voiceName: 'Salli'
     },
     {
       action: 'stream',
-      streamUrl: [`${process.env.HELPBOR_HOST}/vonage/recording/${conversationUUID}/name`]
+      streamUrl: [`${process.env.HELPBOR_HOST}/vonage/recording/${conversationUUID}/name`],
+      level: STREAM_LEVEL
     },
     {
       action: 'talk',
@@ -203,14 +206,41 @@ function nccoSummarizeRequest(conversationUUID: string, phoneNumber: string, zip
     }
   ];
 
+  let nccoPartCustom = [];
+
   if (requestType === 9) {
-    ncco.push({
-      action: 'stream',
-      streamUrl: [`${process.env.HELPBOR_HOST}/vonage/recording/${conversationUUID}/customRequest`]
-    });
+    nccoPartCustom = [
+      {
+        action: 'stream',
+        streamUrl: [`${process.env.HELPBOR_HOST}/vonage/recording/${conversationUUID}/customRequest`],
+        level: STREAM_LEVEL
+      }
+    ];
   }
 
-  return ncco;
+  const nccoPart2 = [
+    {
+      action: 'talk',
+      text: '<speak>' +
+        '<p>If everything is correct, please press 1 on your phone!</p>' +
+        '<p>If an error has crept in somewhere, please press 2 on your phone!</p>' +
+        '</speak>',
+      voiceName: 'Marlene',
+      bargeIn: true
+    }, {
+      action: 'input',
+      eventUrl: [`${process.env.HELPBOR_HOST}/vonage/requestSave/en`],
+      eventMethod: 'POST',
+      timeOut: 10,
+      maxDigits: 1
+    }
+  ];
+
+  return [
+    ...nccoPart1,
+    ...nccoPartCustom,
+    ...nccoPart2
+  ];
 }
 
 function switchRequestType(requestType: number): string {
@@ -241,4 +271,27 @@ function switchRequestType(requestType: number): string {
   return line;
 }
 
-export { nccoWelcome, nccoLanguage, nccoRequest, nccoRepeat, nccoRole, nccoPhoneNumber, nccoName, nccoZip, nccoSummarizeRequest, nccoRequestType, nccoRequestCustom, nccoNotifySummarize };
+const nccoRequestSave = [
+  {
+    action: 'talk',
+    text: '<speak>' +
+      '<p>Great, we have successfully saved your request!</p>' +
+      '<p>If one of our <phoneme alphabet="ipa" ph="hɛlpbər">helpbor</phoneme> heroes or heroines would like to take over the request, he or she will contact you by phone to clarify the details!</p>' +
+      '<p>Goodbye and see you soon at <phoneme alphabet="ipa" ph="hɛlpbər">helpbor</phoneme>, the free platform for neighborhood help.</p>' +
+      '</speak>',
+    voiceName: 'Salli'
+  }
+];
+
+const nccoRequestFailure = [
+  {
+    action: 'talk',
+    text: '<speak>' +
+      '<p>An error has crept into your request, that is annoying!</p>' +
+      '<p>I will now redirect you to the beginning of the query to re-enter your request.</p>' +
+      '</speak>',
+    voiceName: 'Salli'
+  }
+];
+
+export { nccoWelcome, nccoLanguage, nccoRequest, nccoRepeat, nccoRole, nccoPhoneNumber, nccoName, nccoZip, nccoSummarizeRequest, nccoRequestType, nccoRequestCustom, nccoNotifySummarize, nccoRequestFailure, nccoRequestSave };

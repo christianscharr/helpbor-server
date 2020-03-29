@@ -3,6 +3,8 @@ const BEEP = {
   streamUrl: [`${process.env.HELPBOR_HOST}/beep.mp3`]
 };
 
+const STREAM_LEVEL = 0.8;
+
 const nccoWelcome = [
   {
     action: 'talk',
@@ -18,7 +20,7 @@ const nccoLanguage = [
   {
     action: 'talk',
     text: '<speak>' +
-      '<p>Für Deutsch drücken Sie bitte die Nummerntaste 2 auf Ihrem Telefon!</p>' +
+      '<p>Für Deutsch drücken Sie bitte die 2 auf Ihrem Telefon!</p>' +
       '</speak>',
     voiceName: 'Marlene',
     bargeIn: true
@@ -30,9 +32,9 @@ const nccoRole = [
     action: 'talk',
     text: '<speak>' +
       '<p>Möchten Sie eine Anfrage an die kleinen und grossen Helden in Ihrer Nachbarschaft aufgeben?</p>' +
-      '<p>Dann drücken Sie bitte die Nummerntaste 1 auf Ihrem Telefon!</p>' +
+      '<p>Dann drücken Sie bitte die 1 auf Ihrem Telefon!</p>' +
       '<p>Oder möchten Sie gerne selbst ein <phoneme alphabet="ipa" ph="hɛlpbər">helpbor</phoneme>-Held oder Heldin sein?</p>' +
-      '<p>Dann drücken Sie bitte die Nummerntaste 2 auf Ihrem Telefon!</p>' +
+      '<p>Dann drücken Sie bitte die 2 auf Ihrem Telefon!</p>' +
       '</speak>',
     voiceName: 'Marlene',
     bargeIn: true
@@ -73,7 +75,7 @@ const nccoPhoneNumber = [
     action: 'talk',
     text: '<speak>' +
       '<p>Sind sie unter dieser Telefonnummer von der aus Sie gerade anrufen später auch erreichbar?</p>' +
-      '<p>Falls ja, drücken Sie bitte die Nummerntaste 1 und anschliessend die Raute-Taste auf Ihrem Telefon!</p>' +
+      '<p>Falls ja, drücken Sie bitte die 1 gefolgt von der Raute-Taste auf Ihrem Telefon!</p>' +
       '<p>Falls nein, geben Sie bitte Ihre Telefonnummer für Rückfragen über die Nummerntasten Ihres Telefons ein!</p>' +
       '<p>Geben Sie die Telefonnummer bitte ohne Landesvorwahl ein!</p>' +
       '<p>Beenden Sie Ihre Eingabe mit der Raute-Taste.</p>' +
@@ -132,12 +134,12 @@ const nccoRequestType = [
     action: 'talk',
     text: '<speak>' +
       '<p>Bei welcher Art von Anliegen benötigen Sie Unterstützung?</p>' +
-      '<p>Benötigen Sie einige Lebensmittel oder andere Produkte aus dem Detailhandel, drücken Sie bitte die Nummerntaste 1 auf Ihrem Telefon!</p>' +
-      '<p>Müssen Briefe oder Pakete bei der Postfiliale abgeholt werden, drücken Sie bitte die Nummerntaste 2 auf Ihrem Telefon!</p>' +
-      '<p>Benötigen Sie etwas aus der Apotheke, drücken Sie bitte die Nummerntaste 3 auf Ihrem Telefon!</p>' +
-      '<p>Soll Ihr Hund Gassi geführt werden, drücken Sie bitte die Nummerntaste 4 auf Ihrem Telefon!</p>' +
-      '<p>Benötigen Sie einen Fahrdienst, drücken Sie bitte die Nummerntaste 5 auf Ihrem Telefon!</p>' +
-      '<p>Haben Sie ein anderes Anliegen, drücken Sie bitte die Nummerntaste 9 auf Ihrem Telefon!</p>' +
+      '<p>Benötigen Sie einige Lebensmittel oder andere Produkte aus dem Detailhandel, drücken Sie bitte die 1 auf Ihrem Telefon!</p>' +
+      '<p>Müssen Briefe oder Pakete bei der Postfiliale abgeholt werden, drücken Sie bitte die 2 auf Ihrem Telefon!</p>' +
+      '<p>Benötigen Sie etwas aus der Apotheke, drücken Sie bitte die 3 auf Ihrem Telefon!</p>' +
+      '<p>Soll Ihr Hund Gassi geführt werden, drücken Sie bitte die 4 auf Ihrem Telefon!</p>' +
+      '<p>Benötigen Sie einen Fahrdienst, drücken Sie bitte die 5 auf Ihrem Telefon!</p>' +
+      '<p>Haben Sie ein anderes Anliegen, drücken Sie bitte die 9 auf Ihrem Telefon!</p>' +
       '</speak>',
     voiceName: 'Marlene',
     bargeIn: true
@@ -177,20 +179,19 @@ const nccoNotifySummarize = [
 ];
 
 function nccoSummarizeRequest(conversationUUID: string, phoneNumber: string, zipCode: string, requestType: number) {
-  let ncco = [
+  const nccoPart1 = [
     {
       action: 'talk',
       text: '<speak>' +
         '<p>Ich fasse nun noch einmal Ihre Anfrage zusammen, bitte überprüfen Sie die Angaben.</p>' +
-        '<p>Ist alles korrekt, dann drücken Sie bitte die Nummerntaste 1 auf Ihrem Telefon!</p>' +
-        '<p>Hat sich irgendwo ein Fehler eingeschlichen, dann drücken Sie bitte die Nummerntaste 2 auf Ihrem Telefon!</p>' +
         '<p>Ihr Name lautet:</p>' +
         '</speak>',
       voiceName: 'Marlene'
     },
     {
       action: 'stream',
-      streamUrl: [`${process.env.HELPBOR_HOST}/vonage/recording/${conversationUUID}/name`]
+      streamUrl: [`${process.env.HELPBOR_HOST}/vonage/recording/${conversationUUID}/name`],
+      level: STREAM_LEVEL
     },
     {
       action: 'talk',
@@ -203,14 +204,41 @@ function nccoSummarizeRequest(conversationUUID: string, phoneNumber: string, zip
     }
   ];
 
+  let nccoPartCustom = [];
+
   if (requestType === 9) {
-    ncco.push({
-      action: 'stream',
-      streamUrl: [`${process.env.HELPBOR_HOST}/vonage/recording/${conversationUUID}/customRequest`]
-    });
+    nccoPartCustom = [
+      {
+        action: 'stream',
+        streamUrl: [`${process.env.HELPBOR_HOST}/vonage/recording/${conversationUUID}/customRequest`],
+        level: STREAM_LEVEL
+      }
+    ];
   }
 
-  return ncco;
+  const nccoPart2 = [
+    {
+      action: 'talk',
+      text: '<speak>' +
+        '<p>Ist alles korrekt, dann drücken Sie bitte die 1 auf Ihrem Telefon!</p>' +
+        '<p>Hat sich irgendwo ein Fehler eingeschlichen, dann drücken Sie bitte die 2 auf Ihrem Telefon!</p>' +
+        '</speak>',
+      voiceName: 'Marlene',
+      bargeIn: true
+    }, {
+      action: 'input',
+      eventUrl: [`${process.env.HELPBOR_HOST}/vonage/requestSave/de`],
+      eventMethod: 'POST',
+      timeOut: 10,
+      maxDigits: 1
+    }
+  ];
+
+  return [
+    ...nccoPart1,
+    ...nccoPartCustom,
+    ...nccoPart2
+  ];
 }
 
 function switchRequestType(requestType: number): string {
@@ -241,4 +269,27 @@ function switchRequestType(requestType: number): string {
   return line;
 }
 
-export { nccoWelcome, nccoLanguage, nccoRequest, nccoRepeat, nccoRole, nccoPhoneNumber, nccoName, nccoZip, nccoSummarizeRequest, nccoRequestType, nccoRequestCustom, nccoNotifySummarize };
+const nccoRequestSave = [
+  {
+    action: 'talk',
+    text: '<speak>' +
+      '<p>Super, wir haben Ihre Anfrage erfolgreich gespeichert!</p>' +
+      '<p>Möchte einer unserer <phoneme alphabet="ipa" ph="hɛlpbər">helpbor</phoneme>-Helden oder Heldinnen die Anfrage übernehmen, so wird er sich bei Ihnen telefonisch melden um die Einzelheiten abzuklären!</p>' +
+      '<p>Auf Wiedersehen und bis Bald bei <phoneme alphabet="ipa" ph="hɛlpbər">helpbor</phoneme>, der freien Plattform für Nachbarschaftshilfe.</p>' +
+      '</speak>',
+    voiceName: 'Marlene'
+  }
+];
+
+const nccoRequestFailure = [
+  {
+    action: 'talk',
+    text: '<speak>' +
+      '<p>In Ihrer Anfrage hat sich ein Fehler eingeschlichen, dass ist ärgerlich!</p>' +
+      '<p>Ich werde Sie nun an den Anfang der Abfrage umleiten, zur erneuten Erfassung Ihrer Anfrage.</p>' +
+      '</speak>',
+    voiceName: 'Marlene'
+  }
+];
+
+export { nccoWelcome, nccoLanguage, nccoRequest, nccoRepeat, nccoRole, nccoPhoneNumber, nccoName, nccoZip, nccoSummarizeRequest, nccoRequestType, nccoRequestCustom, nccoNotifySummarize, nccoRequestSave, nccoRequestFailure };
