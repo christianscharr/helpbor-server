@@ -7,7 +7,6 @@ import * as tmp from 'tmp';
 import * as fs from 'fs';
 import { PathLike } from "fs";
 import { InputWebhook } from './webhooks/input.webhook.interface';
-import { Readable } from 'stream';
 const Nexmo = require('nexmo');
 
 @Injectable()
@@ -290,6 +289,30 @@ export class VonageService {
         resolve(inputs);
       } else {
         resolve({});
+      }
+    });
+  }
+
+  async getMetadataFromDatabase(conversationUUID: string): Promise<any> {
+    return new Promise<any>(async (resolve, reject) => {
+      const rConn = await this.getConnection();
+      let result;
+
+      try {
+        result = await r.table('calls')
+          .get(conversationUUID)
+          .pluck('conversationUUID', 'startTime', 'endTime', 'lastUpdate', 'duration', 'phoneNumber')
+          .run(rConn);
+      } catch (e) {
+        const errMsg = `[ERROR] Failed to query recording from database:\n${e}`;
+        console.error(errMsg);
+        reject(errMsg);
+      }
+
+      if (result) {
+        resolve(result);
+      } else {
+        reject();
       }
     });
   }

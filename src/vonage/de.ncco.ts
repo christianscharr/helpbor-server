@@ -91,8 +91,7 @@ const nccoName = [
     action: 'record',
     eventUrl: [`${process.env.HELPBOR_HOST}/vonage/name`],
     format: 'mp3',
-    endOnSilence: 3,
-    timeOut: 15
+    endOnSilence: 3
   }
 ]
 
@@ -115,14 +114,14 @@ const nccoZip = [
     timeOut: 10,
     maxDigits: 5
   }
-]
+];
 
 const nccoRequestType = [
   {
     action: 'talk',
     text: '<speak>' +
       '<p>Bei welcher Art von Anliegen benötigen Sie Unterstützung?</p>' +
-      '<p>Benötigen Sie einige Lebensmittel aus dem Detailhandel, drücken Sie bitte die Nummerntaste 1 auf Ihrem Telefon!</p>' +
+      '<p>Benötigen Sie einige Lebensmittel oder andere Produkte aus dem Detailhandel, drücken Sie bitte die Nummerntaste 1 auf Ihrem Telefon!</p>' +
       '<p>Müssen Briefe oder Pakete bei der Postfiliale abgeholt werden, drücken Sie bitte die Nummerntaste 2 auf Ihrem Telefon!</p>' +
       '<p>Benötigen Sie etwas aus der Apotheke, drücken Sie bitte die Nummerntaste 3 auf Ihrem Telefon!</p>' +
       '<p>Soll Ihr Hund Gassi geführt werden, drücken Sie bitte die Nummerntaste 4 auf Ihrem Telefon!</p>' +
@@ -140,51 +139,95 @@ const nccoRequestType = [
     timeOut: 10,
     maxDigits: 1
   }
-]
+];
 
 const nccoRequestCustom = [
   {
     action: 'talk',
-    text: '<speak>' +
-      '<p>Okay, kein Problem!</p>' +
-      '<p>Bitte erklären Sie Ihr Anliegen für die Helfer kurz in maximal einer Minute nach dem Signalton.</p>' +
-      '</speak>',
-    voiceName: 'Marlene',
-    bargeIn: true
+    text: '<speak>Okay, bitte erklären Sie Ihr Anliegen kurz in maximal zwei Minuten nach dem Signalton.</speak>',
+    voiceName: 'Marlene'
   },
   BEEP,
   {
     action: 'record',
     eventUrl: [`${process.env.HELPBOR_HOST}/vonage/customRequest`],
     format: 'mp3',
-    endOnSilence: 3,
-    timeOut: 60
-  }
-]
-
-const nccoSummarizeRequest = (nameAudioUrl: string, phoneNumber: string, zipCode: string) => [
-  {
-    action: 'talk',
-    text: '<speak>' +
-      '<p>Ich fasse nun noch einmal Ihre Anfrage zusammen, bitte überprüfen Sie die Angaben.</p>' +
-      '<p>Ist alles korrekt, dann drücken Sie bitte nach dem Signalton die Nummerntaste 1 auf Ihrem Telefon!</p>' +
-      '<p>Hat sich irgendwo ein Fehler eingeschlichen, dann drücken Sie bitte nach dem Signalton die Nummerntaste 2 auf Ihrem Telefon!</p>' +
-      '<p>Ihr Name lautet:</p>' +
-      '</speak>',
-    voiceName: 'Marlene'
-  },
-  {
-    action: 'stream',
-    streamUrl: [nameAudioUrl]
-  },
-  {
-    action: 'talk',
-    text: '<speak>' +
-      `<p>Ihre Telefonnummer für Rückfragen lautet: <break time="1s" /> <prosody rate="slow"><say-as interpret-as="telephone">${phoneNumber}</say-as></prosody></p>` +
-      `<p>Ihre Postleitzahl lautet: <break time="1s" /> <prosody rate="slow"><say-as interpret-as="telephone">${zipCode}</say-as></prosody></p>` +
-      '</speak>',
-    voiceName: 'Marlene'
+    endOnSilence: 5
   }
 ];
 
-export { nccoWelcome, nccoRequest, nccoRepeat, nccoRole, nccoPhoneNumber, nccoName, nccoZip, nccoSummarizeRequest };
+const nccoNotifySummarize = [
+  {
+    action: 'notify',
+    payload: {},
+    eventUrl: [`${process.env.HELPBOR_HOST}/vonage/requestSummary`],
+    eventMethod: 'POST'
+  }
+];
+
+function nccoSummarizeRequest(conversationUUID: string, phoneNumber: string, zipCode: string, requestType: number) {
+  let ncco = [
+    {
+      action: 'talk',
+      text: '<speak>' +
+        '<p>Ich fasse nun noch einmal Ihre Anfrage zusammen, bitte überprüfen Sie die Angaben.</p>' +
+        '<p>Ist alles korrekt, dann drücken Sie bitte nach dem Signalton die Nummerntaste 1 auf Ihrem Telefon!</p>' +
+        '<p>Hat sich irgendwo ein Fehler eingeschlichen, dann drücken Sie bitte nach dem Signalton die Nummerntaste 2 auf Ihrem Telefon!</p>' +
+        '<p>Ihr Name lautet:</p>' +
+        '</speak>',
+      voiceName: 'Marlene'
+    },
+    {
+      action: 'stream',
+      streamUrl: [`${process.env.HELPBOR_HOST}/vonage/recording/${conversationUUID}/name`]
+    },
+    {
+      action: 'talk',
+      text: '<speak>' +
+        `<p>Ihre Telefonnummer für Rückfragen lautet: <break time="1s" /> <prosody rate="slow"><say-as interpret-as="telephone">${phoneNumber}</say-as></prosody></p>` +
+        `<p>Ihre Postleitzahl lautet: <break time="1s" /> <prosody rate="slow"><say-as interpret-as="telephone">${zipCode}</say-as></prosody></p>` +
+        switchRequestType(requestType) +
+        '</speak>',
+      voiceName: 'Marlene'
+    }
+  ];
+
+  if (requestType === 9) {
+    ncco.push({
+      action: 'stream',
+      streamUrl: [`${process.env.HELPBOR_HOST}/vonage/recording/${conversationUUID}/customRequest`]
+    });
+  }
+
+  return ncco;
+}
+
+function switchRequestType(requestType: number): string {
+  let line = '<p>Sie benötigen Unterstützung ';
+
+  switch (requestType) {
+    case 1:
+      line += 'bei Besorgungen aus dem Detailhandel';
+      break;
+    case 2:
+      line += 'bei Briefen oder Paketen aus der Postfiliale';
+      break;
+    case 3:
+      line += 'bei Besorgungen aus der Apotheke';
+      break;
+    case 4:
+      line += 'beim Gassi führen Ihres Hundes';
+      break;
+    case 5:
+      line += 'bei einer Fahrt';
+      break;
+    case 9:
+      line += 'bei einer anderen Sache.</p><p>Sie haben diese wie folgt beschrieben:';
+      break;
+  }
+
+  line += '</p>';
+  return line;
+}
+
+export { nccoWelcome, nccoRequest, nccoRepeat, nccoRole, nccoPhoneNumber, nccoName, nccoZip, nccoSummarizeRequest, nccoRequestType, nccoRequestCustom, nccoNotifySummarize };
