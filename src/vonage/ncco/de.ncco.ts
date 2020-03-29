@@ -5,6 +5,16 @@ const BEEP = {
 
 const STREAM_LEVEL = 0.8;
 
+const workInProgress = [
+  {
+    action: 'talk',
+    text: '<speak>' +
+      '<p>Diese Funktion ist noch in Arbeit, bitte versuchen Sie es später noch einmal.</p>' +
+      '</speak>',
+    voiceName: 'Marlene'
+  }
+];
+
 const nccoWelcome = [
   {
     action: 'talk',
@@ -292,4 +302,4 @@ const nccoRequestFailure = [
   }
 ];
 
-export { nccoWelcome, nccoLanguage, nccoRequest, nccoRepeat, nccoRole, nccoPhoneNumber, nccoName, nccoZip, nccoSummarizeRequest, nccoRequestType, nccoRequestCustom, nccoNotifySummarize, nccoRequestSave, nccoRequestFailure };
+export { nccoWelcome, nccoLanguage, nccoRequest, nccoRepeat, nccoRole, nccoPhoneNumber, nccoName, nccoZip, nccoSummarizeRequest, nccoRequestType, nccoRequestCustom, nccoNotifySummarize, nccoRequestSave, nccoRequestFailure, workInProgress };

@@ -148,13 +148,7 @@ export class VonageController {
         ]);
       } else if (input.dtmf.startsWith('2')) {
         resolve([
-          {
-            action: 'talk',
-            text: '<speak>' +
-              '<p>Diese Funktion ist noch in Arbeit, bitte probieren Sie es später noch einmal.</p>' +
-              '</speak>',
-            voiceName: 'Marlene'
-          }
+          ...this.ncco[language].workInProgress
         ]);
       } else {
         resolve([
