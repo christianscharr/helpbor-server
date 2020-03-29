@@ -14,6 +14,17 @@ const nccoWelcome = [
   }
 ];
 
+const nccoLanguage = [
+  {
+    action: 'talk',
+    text: '<speak>' +
+      '<p>Für Deutsch drücken Sie bitte die Nummerntaste 2 auf Ihrem Telefon!</p>' +
+      '</speak>',
+    voiceName: 'Marlene',
+    bargeIn: true
+  }
+];
+
 const nccoRole = [
   {
     action: 'talk',
@@ -28,7 +39,7 @@ const nccoRole = [
   },
   {
     action: 'input',
-    eventUrl: [`${process.env.HELPBOR_HOST}/vonage/role`],
+    eventUrl: [`${process.env.HELPBOR_HOST}/vonage/role/de`],
     eventMethod: 'POST',
     submitOnHash: false,
     timeOut: 10,
@@ -62,17 +73,17 @@ const nccoPhoneNumber = [
     action: 'talk',
     text: '<speak>' +
       '<p>Sind sie unter dieser Telefonnummer von der aus Sie gerade anrufen später auch erreichbar?</p>' +
-      '<p>Falls ja, drücken Sie bitte die Nummerntaste 1 auf Ihrem Telefon!</p>' +
+      '<p>Falls ja, drücken Sie bitte die Nummerntaste 1 und anschliessend die Raute-Taste auf Ihrem Telefon!</p>' +
       '<p>Falls nein, geben Sie bitte Ihre Telefonnummer für Rückfragen über die Nummerntasten Ihres Telefons ein!</p>' +
       '<p>Geben Sie die Telefonnummer bitte ohne Landesvorwahl ein!</p>' +
-      '<p>Beenden Sie die Eingabe mit der Raute-Taste.</p>' +
+      '<p>Beenden Sie Ihre Eingabe mit der Raute-Taste.</p>' +
       '</speak>',
     voiceName: 'Marlene',
     bargeIn: true
   },
   {
     action: 'input',
-    eventUrl: [`${process.env.HELPBOR_HOST}/vonage/phoneNumber`],
+    eventUrl: [`${process.env.HELPBOR_HOST}/vonage/phoneNumber/de`],
     eventMethod: 'POST',
     submitOnHash: true,
     timeOut: 10,
@@ -108,7 +119,7 @@ const nccoZip = [
   },
   {
     action: 'input',
-    eventUrl: [`${process.env.HELPBOR_HOST}/vonage/zipCode`],
+    eventUrl: [`${process.env.HELPBOR_HOST}/vonage/zipCode/de`],
     eventMethod: 'POST',
     submitOnHash: true,
     timeOut: 10,
@@ -133,7 +144,7 @@ const nccoRequestType = [
   },
   {
     action: 'input',
-    eventUrl: [`${process.env.HELPBOR_HOST}/vonage/requestType`],
+    eventUrl: [`${process.env.HELPBOR_HOST}/vonage/requestType/de`],
     eventMethod: 'POST',
     submitOnHash: true,
     timeOut: 10,
@@ -160,7 +171,7 @@ const nccoNotifySummarize = [
   {
     action: 'notify',
     payload: {},
-    eventUrl: [`${process.env.HELPBOR_HOST}/vonage/requestSummary`],
+    eventUrl: [`${process.env.HELPBOR_HOST}/vonage/requestSummary/de`],
     eventMethod: 'POST'
   }
 ];
@@ -171,8 +182,8 @@ function nccoSummarizeRequest(conversationUUID: string, phoneNumber: string, zip
       action: 'talk',
       text: '<speak>' +
         '<p>Ich fasse nun noch einmal Ihre Anfrage zusammen, bitte überprüfen Sie die Angaben.</p>' +
-        '<p>Ist alles korrekt, dann drücken Sie bitte nach dem Signalton die Nummerntaste 1 auf Ihrem Telefon!</p>' +
-        '<p>Hat sich irgendwo ein Fehler eingeschlichen, dann drücken Sie bitte nach dem Signalton die Nummerntaste 2 auf Ihrem Telefon!</p>' +
+        '<p>Ist alles korrekt, dann drücken Sie bitte die Nummerntaste 1 auf Ihrem Telefon!</p>' +
+        '<p>Hat sich irgendwo ein Fehler eingeschlichen, dann drücken Sie bitte die Nummerntaste 2 auf Ihrem Telefon!</p>' +
         '<p>Ihr Name lautet:</p>' +
         '</speak>',
       voiceName: 'Marlene'
@@ -230,4 +241,4 @@ function switchRequestType(requestType: number): string {
   return line;
 }
 
-export { nccoWelcome, nccoRequest, nccoRepeat, nccoRole, nccoPhoneNumber, nccoName, nccoZip, nccoSummarizeRequest, nccoRequestType, nccoRequestCustom, nccoNotifySummarize };
+export { nccoWelcome, nccoLanguage, nccoRequest, nccoRepeat, nccoRole, nccoPhoneNumber, nccoName, nccoZip, nccoSummarizeRequest, nccoRequestType, nccoRequestCustom, nccoNotifySummarize };
