@@ -258,7 +258,7 @@ function switchRequestType(requestType: number): string {
 
   switch (requestType) {
     case 1:
-      line += 'with errands from the retail trade';
+      line += 'with errands from the supermarket';
       break;
     case 2:
       line += 'with letters or parcels from the post office';

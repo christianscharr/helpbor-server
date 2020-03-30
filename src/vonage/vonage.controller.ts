@@ -11,6 +11,8 @@ import { ICallLog } from './dto/call.interface';
 import { RecordWebhook } from './webhooks/record.webhook.interface';
 import { Readable } from 'stream';
 import { Response } from 'express';
+import { ApiService } from '../api/api.service';
+import { IRequest, RequestCountry, RequestStatus, RequestType } from '../api/dto/request.interface';
 
 @Controller('vonage')
 export class VonageController {
@@ -19,7 +21,10 @@ export class VonageController {
     en: nccoEN
   }
 
-  constructor(private readonly vonageService: VonageService) {}
+  constructor(
+    private readonly vonageService: VonageService,
+    private readonly apiService: ApiService
+  ) {}
 
   @Post('events')
   @Header('Cache-Control', 'none')
@@ -380,6 +385,43 @@ export class VonageController {
       const num = parseInt(input.dtmf);
 
       if (num === 1) {
+        const inputs = await this.vonageService.getInputsFromDatabase(input.conversation_uuid);
+        let requestType: RequestType;
+
+        switch (parseInt(inputs.requestType)) {
+          case 1:
+            requestType = RequestType.ERRANDS;
+            break;
+          case 2:
+            requestType = RequestType.LETTER_PARCEL;
+            break;
+          case 3:
+            requestType = RequestType.PHARMACY;
+            break;
+          case 4:
+            requestType = RequestType.DOG_WALK;
+            break;
+          case 5:
+            requestType = RequestType.CAR_RIDE;
+            break;
+          case 9:
+            requestType = RequestType.OTHER;
+            break;
+        }
+
+        const request: IRequest = {
+          timestamp: r.now(),
+          conversationUUID: input.conversation_uuid,
+          phoneNo: inputs.phoneNumber,
+          zipCode: inputs.zipCode,
+          country: RequestCountry.SWITZERLAND,
+          requestType: requestType,
+          status: RequestStatus.OPEN
+        };
+
+        const requestId = await this.apiService.insertRequest(request);
+        console.log(`[DEBUG] postRequestSave() - requestId: ${requestId}`);
+
         resolve([
           ...this.ncco[language].nccoRequestSave
         ]);
